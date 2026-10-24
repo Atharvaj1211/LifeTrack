@@ -1,4 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest } from './auth.models';
@@ -10,9 +11,9 @@ import { Router } from '@angular/router';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
   
-  // Update this if your .NET API runs on a different port (check Properties/launchSettings.json)
-  private apiUrl = 'https://localhost:7196/api/auth'; 
+  private apiUrl = 'http://localhost:5189/api/auth'; 
   private tokenKey = 'lifetrack_token';
 
   private currentUserSubject = new BehaviorSubject<AuthResponse | null>(this.getUserFromStorage());
@@ -31,14 +32,19 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem('lifetrack_user');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem('lifetrack_user');
+    }
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem(this.tokenKey);
+    }
+    return null;
   }
 
   isLoggedIn(): boolean {
@@ -46,17 +52,21 @@ export class AuthService {
   }
 
   private setSession(authResult: AuthResponse) {
-    localStorage.setItem(this.tokenKey, authResult.token);
-    localStorage.setItem('lifetrack_user', JSON.stringify({ email: authResult.email, displayName: authResult.displayName }));
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(this.tokenKey, authResult.token);
+      localStorage.setItem('lifetrack_user', JSON.stringify({ email: authResult.email, displayName: authResult.displayName }));
+    }
     this.currentUserSubject.next(authResult);
   }
 
   private getUserFromStorage(): AuthResponse | null {
-    const token = localStorage.getItem(this.tokenKey);
-    const userStr = localStorage.getItem('lifetrack_user');
-    if (token && userStr) {
-      const user = JSON.parse(userStr);
-      return { token, email: user.email, displayName: user.displayName };
+    if (isPlatformBrowser(this.platformId)) {
+      const token = localStorage.getItem(this.tokenKey);
+      const userStr = localStorage.getItem('lifetrack_user');
+      if (token && userStr) {
+        const user = JSON.parse(userStr);
+        return { token, email: user.email, displayName: user.displayName };
+      }
     }
     return null;
   }

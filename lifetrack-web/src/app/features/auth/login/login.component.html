@@ -1,1 +1,32 @@
-<p>login works!</p>
+<div class="auth-container">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Login to LifeTrack</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="you@example.com">
+          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" type="password">
+        </mat-form-field>
+
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+        <button mat-flat-button color="primary" type="submit" [disabled]="loginForm.invalid" class="submit-btn">
+          Login
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-footer class="auth-footer">
+      <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+    </mat-card-footer>
+  </mat-card>
+</div>
